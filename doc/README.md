@@ -1,3 +1,7 @@
+**[qwkpkt - v0.5.0](README.md)**
+
+> [Globals](globals.md)
+
 # qwkpkt
 
 *qwkpkt* is an object serialization and packet framework for network communications and storage.
@@ -16,9 +20,7 @@ to self-encode. Upon deserialization, the *qwkpktDecode* method is called **on a
 This means that the constructor has not been called, so you must ensure that any initialization is
 done inside this method. See /tests/packet/PacketMoveCustom.ts
 
-For more information, refer to [the documentation](https://github.com/Madrok/qwkpkt/tree/main/doc)
-
-# Performance tests
+# The tests
 This suite runs a number of tests, showing the size and speed comparisons between using qwkpkt
 and the popular library [msgpack](https://msgpack.org/).
 ```
@@ -97,4 +99,4 @@ uglifyjs ... -m reserved=['_qwkpktEncode','_qwkpktDecode']
 
 #Haxe Compatible
 This work is largely based on the [Haxe](https://www.haxe.org) serialization format, and is mostly 
-compatible. Haxe Enums are not implemented, and some minor changes to use are required. 
+compatible. Haxe Enums are not implemented, and some minor changes to use are required.
