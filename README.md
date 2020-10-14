@@ -16,7 +16,7 @@ to self-encode. Upon deserialization, the *qwkpktDecode* method is called **on a
 This means that the constructor has not been called, so you must ensure that any initialization is
 done inside this method. See /tests/packet/PacketMoveCustom.ts
 
-For more information, refer to [the documentation](https://github.com/Madrok/qwkpkt/tree/main/doc)
+For more information, refer to [the documentation](https://github.com/Madrok/qwkpkt/blob/main/doc/globals.md)
 
 # Performance tests
 This suite runs a number of tests, showing the size and speed comparisons between using qwkpkt
