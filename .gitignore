@@ -1,0 +1,11 @@
+package-lock.json
+node_modules/
+.vscode/
+.nyc_output/
+lib/
+.data/
+.env
+docs/
+# scratchpad file, invoked with'yarn debug'
+tests/debug.ts
+
