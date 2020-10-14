@@ -1,5 +1,4 @@
 # qwkpkt
-
 *qwkpkt* is an object serialization and packet framework for network communications and storage.
 It is a fast library for serializing messages for things like websockets.
 
@@ -7,15 +6,46 @@ qwkpkt is able to encode objects as well as full javascript classes, but is most
 using the Packet framework that you can see in the tests directory.
 
 # Formats
+## Basic type encoding
+Almost anything can be serialized, simply create a Serializer instance, and start adding things.
+Once you're done, call .toString(). The resulting string can then be passed to an Unserializer
+instance, and items are unserialized in the order they were put in.
+```typescript
+let S = new Serializer();
+S.serialize(123);
+S.serialize(['my','string','array']);
+S.serialize(false);
+let result = S.toString();
+console.log(result);
+let U = new Unserializer();
+let num : number = U.unserialize();
+let arr : Array<String> = U.unserialize();
+let bol : boolean = U.unserialize();
+```
+
 ## Class encoding
-## type encoding
+Entire class instances can be serialized, simply by passing an instance of the class to the
+serializer
+```javascript
+let a = new Apple("green");
+let S = new Serializer();
+S.serialize(a);
+let res = S.toString();
+// yes, toString can be called multiple times, even before
+// full encoding is complete.
+console.log(S.toString());
+let U = new Unserializer(res);
+let apple2 : Apple = U.unserialize(); 
+```
+
 ## Custom encoding
 By adding two functions, *_qwkpktEncode* and *_qwkpktDecode* to any class, when an instance of 
 that class is passed to qwkpkt, the encode method will be called which allows the class
 to self-encode. Upon deserialization, the *qwkpktDecode* method is called **on an empty instance**.
 This means that the constructor has not been called, so you must ensure that any initialization is
-done inside this method. See /tests/packet/PacketMoveCustom.ts
+done inside this method. See [/tests/packet/PacketMoveCustom.ts](https://github.com/Madrok/qwkpkt/blob/main/tests/packet/PacketMoveCustom.ts)
 
+# Documentation
 For more information, refer to [the documentation](https://github.com/Madrok/qwkpkt/blob/main/doc/globals.md)
 
 # Performance tests
@@ -29,7 +59,7 @@ or
 npm run speed-test
 ```
 
-#The results
+# The results
 Generally the slowest, but certainly the most convenient, is encoding classes. In the test results
 below, thos are marked as *qwkclas*
 
@@ -87,7 +117,7 @@ qwkpkt  : 48 bytes      1.85 x smaller
 msgpack : 48 bytes      1.85 x smaller
 ```
 
-#Using custom encoding with code compressors
+# Using custom encoding with code compressors
 Many javascript code compressors do name mangling, which will certainly cause issues with the Custom
 type of serialization. In order to prevent this issue, make sure your minifier is configured to 
 ignore the fields *_qwkpktEncode* and *_qwkpktDecode*. For uglifyjs, this should look something like
@@ -95,6 +125,6 @@ ignore the fields *_qwkpktEncode* and *_qwkpktDecode*. For uglifyjs, this should
 uglifyjs ... -m reserved=['_qwkpktEncode','_qwkpktDecode']
 ```
 
-#Haxe Compatible
+# Haxe Compatible
 This work is largely based on the [Haxe](https://www.haxe.org) serialization format, and is mostly 
 compatible. Haxe Enums are not implemented, and some minor changes to use are required. 
