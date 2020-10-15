@@ -4,7 +4,12 @@
   "description": "Fast serialization for network packets, RPC and storage",
   "keywords": [
     "packet",
-    "serialization"
+    "serialize",
+    "serialization",
+    "network",
+    "haxe",
+    "msgpack",
+    "messagepack"
   ],
   "author": {
     "name": "Russell Weir"

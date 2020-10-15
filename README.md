@@ -5,6 +5,11 @@ It is a fast library for serializing messages for things like websockets.
 qwkpkt is able to encode objects as well as full javascript classes, but is most efficient when 
 using the Packet framework that you can see in the tests directory.
 
+# Installation
+qwkpkt is on npm, so it can be installed with *yarn add qwkpkt* or *npm install qwkpkt*. 
+
+This release has not yet been thoroughly tested for in-browser use.
+
 # Formats
 ## Basic type encoding
 Almost anything can be serialized, simply create a Serializer instance, and start adding things.
