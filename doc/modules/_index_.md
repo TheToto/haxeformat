@@ -8,10 +8,17 @@
 
 ### References
 
+* [Packet](_index_.md#packet)
 * [Serializer](_index_.md#serializer)
 * [Unserializer](_index_.md#unserializer)
 
 ## References
+
+### Packet
+
+Re-exports: [Packet](../classes/_packet_.packet.md)
+
+___
 
 ### Serializer
 

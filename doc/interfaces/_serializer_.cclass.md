@@ -20,7 +20,7 @@
 
 •  **constructor**: { name: string  }
 
-*Defined in [Serializer.ts:271](https://github.com/Madrok/pktstorm/blob/19b5823/src/Serializer.ts#L271)*
+*Defined in [Serializer.ts:271](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Serializer.ts#L271)*
 
 #### Type declaration:
 

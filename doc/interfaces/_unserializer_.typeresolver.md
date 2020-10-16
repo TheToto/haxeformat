@@ -20,4 +20,4 @@
 
 •  **resolveClass**: (name: string) => {}
 
-*Defined in [Unserializer.ts:2](https://github.com/Madrok/pktstorm/blob/19b5823/src/Unserializer.ts#L2)*
+*Defined in [Unserializer.ts:2](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Unserializer.ts#L2)*
