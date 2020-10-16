@@ -1,6 +1,6 @@
 {
   "name": "qwkpkt",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Fast serialization for network packets, RPC and storage",
   "keywords": [
     "packet",
