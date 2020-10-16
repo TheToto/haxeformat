@@ -1,10 +1,11 @@
-import { Packet, PacketTypes } from "./Packet";
+import { Packet } from "../../src/Packet";
+import { PacketTypes } from "./PacketTypes";
 
 export class PacketMove extends Packet {
 	public x: number = 0;
 	public y: number = 0;
 
-	constructor(x:number=-420, y:number=0) {
+	constructor(x: number = -420, y: number = 0) {
 		super(PacketTypes.PACKET_MOVE, ['x', 'y']);
 		this.x = x;
 		this.y = y;
@@ -18,7 +19,7 @@ export class PacketMove extends Packet {
 		return super.encode();
 	}
 
-	protected fromObj(obj:{[key:string]:any}) {
+	protected fromObj(obj: { [key: string]: any }) {
 		this.x = this.getInt(obj.x);
 		this.y = this.getInt(obj.y);
 		return this;

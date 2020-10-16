@@ -1,6 +1,8 @@
-import { Packet, PacketTypes } from "./Packet";
+import { Packet } from "../../src/Packet";
 import { Serializer } from "../../src/Serializer";
 import { Unserializer } from "../../src/Unserializer";
+import { PacketTypes } from "./PacketTypes";
+
 /**
  * This class
  */
@@ -70,7 +72,7 @@ export class PacketMoveCustom extends Packet {
 		this.id = U.unserialize();
 		// or using Reflect
 		Reflect.set(this, "fields", ['x', 'y']);
-		
+
 		this.x = U.unserialize();
 		this.y = U.unserialize();
 	}

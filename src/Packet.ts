@@ -1,14 +1,5 @@
-import { Serializer } from '../../src/Serializer';
-import { Unserializer } from '../../src/Unserializer';
-
-// https://levelup.gitconnected.com/building-type-safe-dictionaries-in-typescript-a072d750cbdf
-
-export enum PacketTypes {
-	PACKET_MOVE = 1,
-	PACKET_CHAT,
-	PACKET_MOTION,
-	PACKET_MOVE_CUSTOM
-}
+import { Serializer } from './Serializer';
+import { Unserializer } from './Unserializer';
 
 export abstract class Packet {
 	private static registry: Record<number, new () => Packet> = {};
@@ -24,6 +15,11 @@ export abstract class Packet {
 		Packet.registry[id] = classRef;
 	}
 
+	/**
+	 * Calling this method will deserialize a acpket, creating a new instance
+	 * of any class that is a subclass of and registered with Packet
+	 * @param str Serialized packet data
+	 */
 	static decode(str:string) : Packet {
 		let uns = new Unserializer(str);
 		let msgId = uns.unserialize();
@@ -99,6 +95,12 @@ export abstract class Packet {
 		return JSON.stringify(obj);
 	}
 
+	/**
+	 * Serialize this packet.
+	 * This method does not have to be overridden by subclasses.
+	 * 
+	 * @returns Packet serialized 
+	 */
 	public encode() {
 		let ser = new Serializer();
 		ser.serialize(this.id);
@@ -110,8 +112,10 @@ export abstract class Packet {
 	}
 
 	/**
-	 * 
-	 * @param v Hopefully a number from 
+	 * Type check data, for use in {@link fromObj}
+	 * @param v Hopefully a number from the serialized data
+	 * @returns Math.floor of number
+	 * @throws Error if value not a number
 	 */
 	protected getInt(v: any): number {
 		// console.log(`getInt ${v} ` + typeof v);
@@ -120,23 +124,39 @@ export abstract class Packet {
 		throw new Error(`Not an int. Got ${v} which is a typeof ` + typeof v);
 	}
 
-	protected getFloat(v:string): number {
+	/**
+	 * Type check data, for use in {@link fromObj}
+	 * @param v Hopefully a number from the serialized data
+	 * @returns A number
+	 * @throws Error if value not a number
+	 */
+	protected getFloat(v:any): number {
 		if(typeof v === 'number')
 			return v;
 		throw new Error(`Not a float. Got ${v} which is a typeof ` + typeof v);
 	}
 
+	/**
+	 * Type check data, for use in {@link fromObj}
+	 * @param v Hopefully a string from the serialized data
+	 * @returns String value
+	 * @throws Error if value not a string
+	 */
 	protected getString(v:any) : string {
 		if(typeof v === 'string')
 			return v;
 		throw new Error(`Not a string. Got ${v} which is a typeof ` + typeof v);
 	}
 
-	protected getBuffer(v:any) : Buffer {
-		if(typeof v === 'object')
-			return v.getData();
-		throw new Error(`Not a string. Got ${v} which is a typeof ` + typeof v);
+	/**
+	 * Type check data, for use in {@link fromObj}
+	 * @param v Hopefully an Array from the serialized data
+	 * @returns Typed array
+	 * @throws Error if value not an Array
+	 */
+	protected getArray<T>(v:any) : Array<T> {
+		if(Array.isArray(v))
+			return v;
+		throw new Error(`Not an array. Got ${v} which is a typeof ` + typeof v);
 	}
 }
-
-//https://www.typescriptlang.org/docs/handbook/2/classes.html#this-types

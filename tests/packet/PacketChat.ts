@@ -1,9 +1,10 @@
-import { Packet, PacketTypes } from "./Packet";
+import { Packet } from "../../src/Packet";
+import { PacketTypes } from "./PacketTypes";
 
 export class PacketChat extends Packet {
 	public text: string = "";
 
-	constructor(text:string = "") {
+	constructor(text: string = "") {
 		super(PacketTypes.PACKET_CHAT, ['text']);
 		this.text = text;
 	}
@@ -16,7 +17,7 @@ export class PacketChat extends Packet {
 		return super.encode();
 	}
 
-	protected fromObj(obj:{[key:string]:any}) {
+	protected fromObj(obj: { [key: string]: any }) {
 		this.text = this.getString(obj.text);
 		return this;
 	}
