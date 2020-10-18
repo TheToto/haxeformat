@@ -66,8 +66,7 @@
 		"bin",
 		"lib",
 		"node_modules",
-		"tests",
-		"jasmine"
+		"tests"
 	],
 	"include": [ "src" ]
 }

@@ -3,5 +3,8 @@
 	"spec_dir": "./tests/node",
 	"spec_files": [
 		"*[tT]est.ts"
+	],
+	"helpers": [
+		"jasmine/*.ts"
 	]
 }
