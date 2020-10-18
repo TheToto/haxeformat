@@ -1,6 +1,6 @@
 // import {describe, it} from 'jasmine';
 import "jasmine"
-import { Packet, PacketTypes, PacketMove } from './packet/packets';
+import { Packet, PacketTypes, PacketMove } from '../packet/packets';
 
 describe("PacketMove", () => {
 	var pm = new PacketMove(23,45);

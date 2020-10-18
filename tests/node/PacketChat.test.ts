@@ -1,6 +1,6 @@
 // import {describe, it} from 'jasmine';
 import "jasmine"
-import { Packet, PacketTypes, PacketChat } from "./packet/packets";
+import { Packet, PacketTypes, PacketChat } from "../packet/packets";
 
 describe("PacketChat", () => {
     var pm = new PacketChat("Hi there, how the heck have you been?");

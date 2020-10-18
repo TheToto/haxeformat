@@ -1,6 +1,6 @@
 import "jasmine"
-import { Serializer } from '../src/Serializer';
-import { Unserializer } from '../src/Unserializer';
+import { Serializer } from '../../src/Serializer';
+import { Unserializer } from '../../src/Unserializer';
 
 
 function justSerialize(v:any) : string {
