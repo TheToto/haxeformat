@@ -12,4 +12,5 @@ tests/debug.ts
 archive/
 # karma testing
 coverage/
-
+# mac. pfft
+.DS_Store
