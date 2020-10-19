@@ -5,6 +5,11 @@ node_modules/
 .data/
 .env
 docs/
+yarn-error.log
 # scratchpad file, invoked with'yarn debug'
 tests/debug.ts
+# unused stuff
+archive/
+# karma testing
+coverage/
 
