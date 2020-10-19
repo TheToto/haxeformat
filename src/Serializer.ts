@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer'
+
 export class Serializer {
 	/**
 	 * If the values you are serializing can contain circular references or

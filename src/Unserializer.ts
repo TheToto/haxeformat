@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer'
+
 export interface TypeResolver {
 	resolveClass : (name:string) => (new () => any)
 }
