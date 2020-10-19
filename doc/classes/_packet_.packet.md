@@ -1,4 +1,4 @@
-**[qwkpkt - v0.5.0](../README.md)**
+**[qwkpkt - v0.6.0](../README.md)**
 
 > [Globals](../globals.md) / ["Packet"](../modules/_packet_.md) / Packet
 
@@ -33,7 +33,7 @@
 
 \+ **new Packet**(`id`: number, `fields`: Array\<string>): [Packet](_packet_.packet.md)
 
-*Defined in [Packet.ts:45](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Packet.ts#L45)*
+*Defined in [Packet.ts:45](https://github.com/Madrok/pktstorm/blob/3df6946/src/Packet.ts#L45)*
 
 #### Parameters:
 
@@ -50,7 +50,7 @@ Name | Type |
 
 • `Readonly` **id**: number
 
-*Defined in [Packet.ts:44](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Packet.ts#L44)*
+*Defined in [Packet.ts:44](https://github.com/Madrok/pktstorm/blob/3df6946/src/Packet.ts#L44)*
 
 ## Methods
 
@@ -58,7 +58,7 @@ Name | Type |
 
 ▸ **encode**(): string
 
-*Defined in [Packet.ts:104](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Packet.ts#L104)*
+*Defined in [Packet.ts:104](https://github.com/Madrok/pktstorm/blob/3df6946/src/Packet.ts#L104)*
 
 Serialize this packet.
 This method does not have to be overridden by subclasses.
@@ -73,7 +73,7 @@ ___
 
 ▸ **test**(): void
 
-*Defined in [Packet.ts:55](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Packet.ts#L55)*
+*Defined in [Packet.ts:55](https://github.com/Madrok/pktstorm/blob/3df6946/src/Packet.ts#L55)*
 
 Test that the fields all exist
 
@@ -85,7 +85,7 @@ ___
 
 ▸ **toJSON**(): string
 
-*Defined in [Packet.ts:88](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Packet.ts#L88)*
+*Defined in [Packet.ts:88](https://github.com/Madrok/pktstorm/blob/3df6946/src/Packet.ts#L88)*
 
 Returns a json version of this packet
 
@@ -97,7 +97,7 @@ ___
 
 ▸ `Abstract`**toString**(): string
 
-*Defined in [Packet.ts:83](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Packet.ts#L83)*
+*Defined in [Packet.ts:83](https://github.com/Madrok/pktstorm/blob/3df6946/src/Packet.ts#L83)*
 
 All packets must implement a toString, which is useful for debugging.
 
@@ -111,7 +111,7 @@ ___
 
 ▸ `Static`**decode**(`str`: string): [Packet](_packet_.packet.md)
 
-*Defined in [Packet.ts:23](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Packet.ts#L23)*
+*Defined in [Packet.ts:23](https://github.com/Madrok/pktstorm/blob/3df6946/src/Packet.ts#L23)*
 
 Calling this method will deserialize a acpket, creating a new instance
 of any class that is a subclass of and registered with Packet
@@ -130,7 +130,7 @@ ___
 
 ▸ `Static`**register**(`id`: number, `classRef`: {}): void
 
-*Defined in [Packet.ts:12](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Packet.ts#L12)*
+*Defined in [Packet.ts:12](https://github.com/Madrok/pktstorm/blob/3df6946/src/Packet.ts#L12)*
 
 Must be called by all pakect types after the class definition
 

@@ -1,4 +1,4 @@
-**[qwkpkt - v0.5.0](../README.md)**
+**[qwkpkt - v0.6.0](../README.md)**
 
 > [Globals](../globals.md) / "index"
 

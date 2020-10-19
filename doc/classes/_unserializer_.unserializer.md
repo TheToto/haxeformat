@@ -1,4 +1,4 @@
-**[qwkpkt - v0.5.0](../README.md)**
+**[qwkpkt - v0.6.0](../README.md)**
 
 > [Globals](../globals.md) / ["Unserializer"](../modules/_unserializer_.md) / Unserializer
 
@@ -30,7 +30,7 @@
 
 \+ **new Unserializer**(`s`: string): [Unserializer](_unserializer_.unserializer.md)
 
-*Defined in [Unserializer.ts:57](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Unserializer.ts#L57)*
+*Defined in [Unserializer.ts:59](https://github.com/Madrok/pktstorm/blob/3df6946/src/Unserializer.ts#L59)*
 
 #### Parameters:
 
@@ -46,7 +46,7 @@ Name | Type |
 
 •  **resolver**: [TypeResolver](../interfaces/_unserializer_.typeresolver.md)
 
-*Defined in [Unserializer.ts:57](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Unserializer.ts#L57)*
+*Defined in [Unserializer.ts:59](https://github.com/Madrok/pktstorm/blob/3df6946/src/Unserializer.ts#L59)*
 
 The class resolver for the unserializer.
 Defaults to {@link UnserializerDEFAULT_RESOLVER}, but
@@ -58,7 +58,7 @@ ___
 
 ▪ `Static` **DEFAULT\_RESOLVER**: [TypeResolver](../interfaces/_unserializer_.typeresolver.md) = Unserializer.DefaultResolver
 
-*Defined in [Unserializer.ts:13](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Unserializer.ts#L13)*
+*Defined in [Unserializer.ts:15](https://github.com/Madrok/pktstorm/blob/3df6946/src/Unserializer.ts#L15)*
 
 ## Methods
 
@@ -66,7 +66,7 @@ ___
 
 ▸ **unserialize**(): any
 
-*Defined in [Unserializer.ts:135](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Unserializer.ts#L135)*
+*Defined in [Unserializer.ts:137](https://github.com/Madrok/pktstorm/blob/3df6946/src/Unserializer.ts#L137)*
 
 **Returns:** any
 
@@ -76,7 +76,7 @@ ___
 
 ▸ `Static`**registerSerializableClass**(`clazz`: {}): void
 
-*Defined in [Unserializer.ts:26](https://github.com/Madrok/pktstorm/blob/f0875b2/src/Unserializer.ts#L26)*
+*Defined in [Unserializer.ts:28](https://github.com/Madrok/pktstorm/blob/3df6946/src/Unserializer.ts#L28)*
 
 For security, classes will not be unserialized unless they
 are registered as safe. Before unserializing, be sure to

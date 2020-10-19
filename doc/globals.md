@@ -1,8 +1,8 @@
-**[qwkpkt - v0.5.0](README.md)**
+**[qwkpkt - v0.6.0](README.md)**
 
 > Globals
 
-# qwkpkt - v0.5.0
+# qwkpkt - v0.6.0
 
 ## Index
 
