@@ -1,8 +1,8 @@
-import { Serializer } from '../src/Serializer';
-import { Unserializer } from '../src/Unserializer';
+import { Serializer } from '../../src/Serializer';
+import { Unserializer } from '../../src/Unserializer';
 import { HrTimer, HrTimerValue } from './HrTimer';
 import testHeader from './testHeader';
-import { Packet, PacketChat, PacketMotion, PacketMove, PacketMoveCustom } from './packet/packets';
+import { Packet, PacketChat, PacketMotion, PacketMove, PacketMoveCustom } from '../packet/packets';
 
 let msgpack = require("msgpack-lite");
 
