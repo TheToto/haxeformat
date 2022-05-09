@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer'
+import {HaxeEnum} from "./HaxeEnum";
 
 export class Serializer {
 	/**
@@ -13,6 +14,7 @@ export class Serializer {
 	 * setting their `useCache` field.
 	 */
 	public static USE_CACHE: boolean = false;
+	public static USE_ENUM_INDEX: boolean = true;
 
 	// /**
 	// 	Use constructor indexes for enums instead of names.
@@ -49,6 +51,7 @@ export class Serializer {
 	 * See {@link USE_CACHE} for a complete description
 	 */
 	public useCache: boolean = Serializer.USE_CACHE;
+	public useEnumIndex: boolean = Serializer.USE_ENUM_INDEX;
 
 	constructor() { }
 
@@ -165,6 +168,37 @@ export class Serializer {
 					this.buf += ":";
 					this.buf += bufStr;
 					return;
+				}
+				if (v instanceof HaxeEnum && v.constructor) {
+					if (this.useEnumIndex) {
+						this.buf += "j";
+						this.serialize(v.name);
+						this.buf += ":";
+						// @ts-ignore TODO
+						let constructs = v.constructor["getEnumConstructs"]();
+						let index = constructs.findIndex((e:any) => e.name === v.tag);
+						if (index === -1) throw err("Invalid enum constructs");
+						this.buf += index;
+						this.buf += ":";
+						// @ts-ignore TODO
+						let params = v["getParams"]();
+						this.buf += params.length;
+						params.forEach((param:any) => {
+							this.serialize(param);
+						})
+						return;
+					} else {
+						this.buf += "w";
+						this.serialize(v.name);
+						this.serialize(v.tag);
+						this.buf += ":";
+						// @ts-ignore TODO
+						let params = v["getParams"]();
+						this.buf += params.length;
+						params.forEach((param:any) => {
+							this.serialize(param);
+						})
+						return;					}
 				}
 				if (v.constructor?.name) {
 					try {
