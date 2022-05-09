@@ -21,7 +21,7 @@ export declare class Unserializer {
     constructor(s: string);
     protected isEof(c: number): boolean;
     protected unserializeObject(o: any): void;
-    protected unserializeEnum(edecl: any, tag: string | number): any;
+    protected unserializeEnum(edecl: typeof HaxeEnum, tag: string | number): any;
     protected readDigits(): number;
     protected readFloat(): number;
     unserialize(): any;

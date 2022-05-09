@@ -108,9 +108,9 @@ export class Unserializer {
         this.pos++;
     }
 
-    protected unserializeEnum(edecl: any, tag: string | number): any {
+    protected unserializeEnum(edecl: typeof HaxeEnum, tag: string | number): any {
         this.pos++; /* skip ':' */
-        let constructs = edecl["getEnumConstructs"]()
+        let constructs = edecl.getEnumConstructs();
 
         let enumClass;
         if (typeof tag == "number") {
@@ -122,6 +122,7 @@ export class Unserializer {
             throw new Error("Unknown enum index/name : " + tag);
         let numArgs = this.readDigits();
         let args = Array(numArgs).fill(0).map(_ => this.unserialize());
+        // @ts-ignore
         return new enumClass(...args);
     }
 

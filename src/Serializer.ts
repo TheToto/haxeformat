@@ -174,14 +174,12 @@ export class Serializer {
 						this.buf += "j";
 						this.serialize(v.name);
 						this.buf += ":";
-						// @ts-ignore TODO
-						let constructs = v.constructor["getEnumConstructs"]();
+						let constructs = (v.constructor as typeof HaxeEnum).getEnumConstructs();
 						let index = constructs.findIndex((e:any) => e.name === v.tag);
 						if (index === -1) throw err("Invalid enum constructs");
 						this.buf += index;
 						this.buf += ":";
-						// @ts-ignore TODO
-						let params = v["getParams"]();
+						let params = v.getParams();
 						this.buf += params.length;
 						params.forEach((param:any) => {
 							this.serialize(param);
@@ -192,8 +190,7 @@ export class Serializer {
 						this.serialize(v.name);
 						this.serialize(v.tag);
 						this.buf += ":";
-						// @ts-ignore TODO
-						let params = v["getParams"]();
+						let params = v.getParams();
 						this.buf += params.length;
 						params.forEach((param:any) => {
 							this.serialize(param);
