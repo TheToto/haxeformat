@@ -73,7 +73,7 @@ describe("Serializer", () => {
 	it("does buffers", ()=> {
 		let s = "Hello world from the serializer";
 		let bytes = Buffer.from(s);
-		expect(justSerialize(bytes)).toBe("s44:SGVsbG8gd29ybGQgZnJvbSB0aGUgc2VyaWFsaXplcg==");
+		expect(justSerialize(bytes)).toBe("s42:SGVsbG8gd29ybGQgZnJvbSB0aGUgc2VyaWFsaXplcg");
 		expect(serializeAndUnserialize(bytes).toString()).toBe(s);
 	});
 

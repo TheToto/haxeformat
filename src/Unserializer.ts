@@ -226,12 +226,12 @@ export class Unserializer {
             case 114: // "r" class enum or structure reference
                 var n = this.readDigits();
                 if (n < 0 || n >= this.cache.length)
-					throw new Error("Invalid reference");
+                    throw new Error("Invalid reference");
                 return this.cache[n];
             case 82: // "R" string reference
                 var n = this.readDigits();
                 if (n < 0 || n >= this.scache.length)
-					throw new Error("Invalid string reference");
+                    throw new Error("Invalid string reference");
                 return this.scache[n];
             case 120: // "x" throw an exception
                 throw new Error(this.unserialize());
@@ -239,7 +239,7 @@ export class Unserializer {
                 let cname = this.unserialize();
                 let cli = this.resolver.resolveClass(cname);
                 if (!cli)
-					throw new Error("Class not found " + cname);
+                    throw new Error("Class not found " + cname);
                 let co: any = Object.create(cli.prototype); // creates an empty instance, no constructor is called
                 this.cache.push(co);
                 this.unserializeObject(co);
@@ -248,7 +248,7 @@ export class Unserializer {
                 let ename1 = this.unserialize();
                 let edecl1 = this.resolver.resolveEnum(ename1);
                 if (edecl1 == null)
-					throw new Error("Enum not found " + ename1);
+                    throw new Error("Enum not found " + ename1);
                 let e1 = this.unserializeEnum(edecl1, this.unserialize());
                 this.cache.push(e1);
                 this.pos++;
@@ -257,7 +257,7 @@ export class Unserializer {
                 let ename2 = this.unserialize();
                 let edecl2 = this.resolver.resolveEnum(ename2);
                 if (edecl2 == null)
-					throw new Error("Enum not found " + ename2);
+                    throw new Error("Enum not found " + ename2);
                 this.pos++; /* skip ':' */
                 let index = this.readDigits();
                 let e2 = this.unserializeEnum(edecl2, index);
@@ -308,8 +308,12 @@ export class Unserializer {
             case 115: // "s" Buffers
                 let bytesLen = this.readDigits();
                 if (get(this.pos++) !== 58 /*":"*/ || this.length - this.pos < bytesLen)
-					throw new Error("Invalid bytes length");
-                let bytes = Buffer.from(this.buf.substr(this.pos, bytesLen), 'base64');
+                    throw new Error("Invalid bytes length");
+                let bytes = Buffer.from(
+                    this.buf.substr(this.pos, bytesLen)
+                        .replace(/%/g, '+')
+                        .replace(/:/g, '/'),
+                    'base64');
                 this.pos += bytesLen;
                 this.cache.push(bytes);
                 return bytes;
@@ -317,13 +321,13 @@ export class Unserializer {
                 let name = this.unserialize();
                 let cl = this.resolver.resolveClass(name);
                 if (cl == null)
-					throw new Error("Class not found " + name);
+                    throw new Error("Class not found " + name);
                 let cclo: any = Object.create(cl.prototype); // creates an empty instance, no constructor is called
                 this.cache.push(cclo);
                 // if this throws, it is because the user had an '_qwkpktEncode' method, but no '_qwkpktDecode' method
                 cclo._qwkpktDecode(this);
                 if (get(this.pos++) !== 103 /*"g"*/)
-					throw new Error("Invalid custom data");
+                    throw new Error("Invalid custom data");
                 return cclo;
             case 65: // "A" Class<Dynamic>
                 // var name = this.unserialize();

@@ -134,7 +134,7 @@ export class Serializer {
 
 				if (Array.isArray(v)) {
 					let ucount = 0;
-					this.buf += "a";
+					this.buf += "a"; // Support list ?
 					let l = v.length;
 					for (let i = 0; i < l; i++) {
 						if (v[i] === null || v[i] === undefined)
@@ -163,7 +163,10 @@ export class Serializer {
 				}
 				if (Buffer.isBuffer(v)) {
 					this.buf += "s";
-					let bufStr = v.toString('base64');
+					let bufStr = v.toString('base64')
+						.replace(/\+/g, '%')
+						.replace(/\//g, ':')
+						.replace(/={1,2}$/, '');
 					this.buf += bufStr.length;
 					this.buf += ":";
 					this.buf += bufStr;
