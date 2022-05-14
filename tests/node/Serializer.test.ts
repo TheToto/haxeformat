@@ -79,8 +79,8 @@ describe("Serializer", () => {
 
 	it("does dates", () => {
 		let d = new Date(1602561002310); // 2020-10-13T03:50:02.310Z
-		expect(justSerialize(d)).toBe("v1602561002310");
-		expect(serializeAndUnserialize(d).getTime()).toBe(1602561002310);
+		expect(justSerialize(d)).toBe("v2020-10-13 03:50:02");
+		expect(serializeAndUnserialize(d).getTime()).toBe(1602561002000); // We lose milliseconds
 	});
 
 	it("does objects", () => {

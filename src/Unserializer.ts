@@ -302,7 +302,10 @@ export class Unserializer {
                 this.pos++;
                 return wm;
             case 118: // "v" Date
-                let d: Date = new Date(this.readFloat());
+                var dateStr = this.buf.substr(this.pos, 19);
+                this.pos += 19;
+                var [date, time] = dateStr.split(' ')
+                let d: Date = new Date(`${date}T${time}Z`);
                 this.cache.push(d);
                 return d;
             case 115: // "s" Buffers

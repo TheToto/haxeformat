@@ -231,6 +231,16 @@ export class Serializer {
 		this.buf += s;
 	}
 
+	protected serializeDate(date: Date) {
+		let year = date.getUTCFullYear();
+		let month = ("0" + (date.getUTCMonth() + 1)).slice(-2);
+		let day = ("0" + date.getUTCDate()).slice(-2);
+		let hour = ("0" + date.getUTCHours()).slice(-2);
+		let minute = ("0" + date.getUTCMinutes()).slice(-2);
+		let seconds = ("0" + date.getUTCSeconds()).slice(-2);
+		return `${year}-${month}-${day} ${hour}:${minute}:${seconds}`
+	}
+
 	protected serializeClass(v: any, className: string) {
 		// uses .name syntax because there may be an issue in minified code
 		// where the name of the class has been changed. Not so for built-ins
@@ -238,7 +248,7 @@ export class Serializer {
 		switch (className) {
 			case Date.name:
 				this.buf += "v";
-				this.buf += String(v.getTime());
+				this.buf += this.serializeDate(v);
 				break;
 			case Array.name:
 				throw new Error("Arrays should not get here");
