@@ -1,3 +1,9 @@
+# haxeformat
+
+Fork of `qwkpkt`, with some fix and extra features to follow exactly the haxe serialization format (haxe enums, dates format, strings base64).
+
+# Fork of :
+
 # qwkpkt
 *qwkpkt* is an object serialization and packet framework for network communications and storage.
 It is a fast library for serializing messages for things like websockets.
