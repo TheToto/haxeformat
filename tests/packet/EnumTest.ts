@@ -1,26 +1,26 @@
 import {HaxeEnum} from "../../src/HaxeEnum";
 
-export class EnumTest extends HaxeEnum {
-    constructor(tag: string) {
-        super("EnumTest", tag);
-    }
+export abstract class EnumTest extends HaxeEnum {
+    static get enum() { return  "EnumTest"; }
 
     static getEnumConstructs() {
-        return [EnumVariant]
+        return [EnumVariant];
     }
 }
 
 export class EnumVariant extends EnumTest {
+    static get tag() { return  "EnumVariant"; }
+
     param1: string
     param2: string
 
     constructor(param1: string, param2: string) {
-        super("EnumVariant");
+        super();
         this.param1 = param1;
         this.param2 = param2;
     }
 
     getParams() {
-        return [this.param1, this.param2]
+        return [this.param1, this.param2];
     }
 }

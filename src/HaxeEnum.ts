@@ -1,13 +1,12 @@
-export class HaxeEnum {
-    name: string
-    tag: string
-
-    constructor(name: string, tag: string) {
-        this.name = name;
-        this.tag = tag;
+export abstract class HaxeEnum {
+    static get enum(): string {
+        throw new Error('get enum must be implemented');
+    }
+    static get tag(): string {
+        throw new Error('get tag must be implemented');
     }
 
-    static getEnumConstructs(): (typeof HaxeEnum)[]{
+    static getEnumConstructs(): any[]{
         throw new Error('getEnumConstructs must be implemented');
     }
 

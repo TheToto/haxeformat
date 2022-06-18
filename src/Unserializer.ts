@@ -42,7 +42,7 @@ export class Unserializer {
     }
 
     public static registerSerializableEnum(enumz: typeof HaxeEnum) {
-        let name = enumz.name;
+        let name = enumz.enum;
         if (name === undefined || name === null)
             throw new Error("Unable to get enum name");
         if (name === "undefined" || name === "null" || name === "")
@@ -116,7 +116,7 @@ export class Unserializer {
         if (typeof tag == "number") {
             enumClass = constructs[tag];
         } else {
-            enumClass = constructs.find((e: any) => e.name === tag);
+            enumClass = constructs.find((e: typeof HaxeEnum) => e.tag === tag);
         }
         if (enumClass == null)
             throw new Error("Unknown enum index/name : " + tag);

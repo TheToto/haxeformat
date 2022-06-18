@@ -173,13 +173,14 @@ export class Serializer {
 					return;
 				}
 				if (v instanceof HaxeEnum && v.constructor) {
+					const constructor = v.constructor as typeof HaxeEnum
 					if (this.useEnumIndex) {
 						this.buf += "j";
-						this.serialize(v.name);
+						this.serialize(constructor.enum);
 						this.buf += ":";
-						let constructs = (v.constructor as typeof HaxeEnum).getEnumConstructs();
-						let index = constructs.findIndex((e:any) => e.name === v.tag);
-						if (index === -1) throw err("Invalid enum constructs");
+						let constructs = constructor.getEnumConstructs();
+						let index = constructs.findIndex((e:typeof HaxeEnum) => e.tag === constructor.tag);
+						if (index === -1) throw new Error("Invalid enum constructs");
 						this.buf += index;
 						this.buf += ":";
 						let params = v.getParams();
@@ -190,15 +191,16 @@ export class Serializer {
 						return;
 					} else {
 						this.buf += "w";
-						this.serialize(v.name);
-						this.serialize(v.tag);
+						this.serialize(constructor.enum);
+						this.serialize(constructor.tag);
 						this.buf += ":";
 						let params = v.getParams();
 						this.buf += params.length;
 						params.forEach((param:any) => {
 							this.serialize(param);
 						})
-						return;					}
+						return;
+					}
 				}
 				if (v.constructor?.name) {
 					try {

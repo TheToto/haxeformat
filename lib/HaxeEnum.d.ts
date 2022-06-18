@@ -1,7 +1,6 @@
-export declare class HaxeEnum {
-    name: string;
-    tag: string;
-    constructor(name: string, tag: string);
-    static getEnumConstructs(): (typeof HaxeEnum)[];
+export declare abstract class HaxeEnum {
+    static get enum(): string;
+    static get tag(): string;
+    static getEnumConstructs(): any[];
     getParams(): any[];
 }
