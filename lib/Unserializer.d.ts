@@ -1,7 +1,8 @@
 import { HaxeEnum } from "./HaxeEnum";
+export declare type TypeHint = "List" | "StringMap" | "IntMap" | "ObjectMap" | string;
 export interface TypeResolver {
-    resolveClass: (name: string) => (new () => any);
-    resolveEnum: (name: string) => typeof HaxeEnum;
+    resolveClass: (name: string) => (new () => any) | undefined | null;
+    resolveEnum: (name: string) => typeof HaxeEnum | undefined | null;
 }
 export declare class Unserializer {
     protected static classRegister: Record<string, new () => any>;
@@ -18,10 +19,12 @@ export declare class Unserializer {
     protected cache: Array<any>;
     protected scache: Array<string>;
     resolver: TypeResolver;
+    allowUnregistered: boolean;
+    addTypeHints: boolean;
     constructor(s: string);
     protected isEof(c: number): boolean;
     protected unserializeObject(o: any): void;
-    protected unserializeEnum(edecl: typeof HaxeEnum, tag: string | number): any;
+    protected unserializeEnum(edecl: typeof HaxeEnum | undefined | null, tag: string | number, ename: string): any;
     protected readDigits(): number;
     protected readFloat(): number;
     unserialize(): any;

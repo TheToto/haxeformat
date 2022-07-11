@@ -16,6 +16,6 @@ export declare class Serializer {
     protected serializeString(s: string): void;
     protected serializeDate(date: Date): string;
     protected serializeClass(v: any, className: string): void;
-    protected serializeFields(v: {}): void;
+    protected serializeFields(v: {}, endChar?: string): void;
     protected serializeRef(v: any): boolean;
 }
