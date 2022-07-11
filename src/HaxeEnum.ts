@@ -1,10 +1,7 @@
 export abstract class HaxeEnum {
-    static get enum(): string {
-        throw new Error('get enum must be implemented');
-    }
-    static get tag(): string {
-        throw new Error('get tag must be implemented');
-    }
+    // Following static members must be implemented
+    static readonly enum: string = "Unimplemented"
+    static readonly tag: string = "Unimplemented"
 
     static getEnumConstructs(): any[]{
         throw new Error('getEnumConstructs must be implemented');

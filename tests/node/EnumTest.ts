@@ -1,7 +1,7 @@
 import {HaxeEnum} from "../../src/HaxeEnum";
 
 export abstract class EnumTest extends HaxeEnum {
-    static get enum() { return  "EnumTest"; }
+    static readonly enum: string = "EnumTest";
 
     static getEnumConstructs() {
         return [EnumVariant];
@@ -9,7 +9,7 @@ export abstract class EnumTest extends HaxeEnum {
 }
 
 export class EnumVariant extends EnumTest {
-    static get tag() { return  "EnumVariant"; }
+    static readonly tag: string = "EnumVariant";
 
     param1: string
     param2: string

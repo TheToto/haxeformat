@@ -138,15 +138,8 @@ export class Unserializer {
         } else {
             // If enum is not registered, craft the enum. A bit dirty though.
             const genericEnum = Object.create(HaxeEnum.prototype);
-            Object.defineProperty(genericEnum.constructor, 'enum', {
-                get: () => ename
-            });
-            Object.defineProperty(genericEnum.constructor, 'tag', {
-                get: () => tag
-            });
-            Object.defineProperty(genericEnum.constructor, 'tag', {
-                get: () => tag
-            });
+            genericEnum.constructor.enum = ename;
+            genericEnum.constructor.tag = tag;
             Object.defineProperty(genericEnum.constructor, 'getEnumConstructs', {
                 value: () => {
                     if (typeof tag === "number") {
