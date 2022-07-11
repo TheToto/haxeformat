@@ -5,6 +5,25 @@ Fork of `qwkpkt`, with some fix and extra features to follow exactly the haxe se
 # Installation
 haxeformat is on npm, so it can be installed with *yarn add haxeformat* or *npm install haxeformat*. 
 
+# Options
+```typescript
+let S = new Serializer();
+let U = new Unserializer();
+
+// Serialize enums with their index instead their name.
+S.useEnumIndex = false;
+
+// Allow to unserialize class or enums that are not registred using
+// Unserializer.registerSerializableEnum()
+// Unserializer.registerSerializableClass()
+U.allowUnregistered = false;
+
+// Add a `___type` property to some objects,
+// to keep haxe type information (like Array vs List).
+// This allow to Unserialize, then Serialize, and keep the sames types
+U.addTypeHints = true;
+```
+
 # Formats
 ## Basic type encoding
 Almost anything can be serialized, simply create a Serializer instance, and start adding things.
