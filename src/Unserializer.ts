@@ -290,7 +290,6 @@ export class Unserializer {
                     throw new Error("Enum not found " + ename1);
                 let e1 = this.unserializeEnum(edecl1, this.unserialize(), ename1);
                 this.cache.push(e1);
-                this.pos++;
                 return e1;
             case 106: // "j" enum instance by index
                 let ename2 = this.unserialize();
@@ -301,7 +300,6 @@ export class Unserializer {
                 let index = this.readDigits();
                 let e2 = this.unserializeEnum(edecl2, index, ename2);
                 this.cache.push(e2);
-                this.pos++;
                 return e2;
             case 108: // "l" haxe list to javascript array
                 let l = new Array<any>();
