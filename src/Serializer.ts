@@ -1,5 +1,18 @@
 import { Buffer } from 'buffer'
 import {HaxeEnum} from "./HaxeEnum";
+import {TypeHint} from "./Unserializer";
+import {type} from "os";
+
+function getTypeHint(value: any): TypeHint | null {
+	return value["___type"] ?? null;
+}
+
+function iterateFieldsObject(object:any, func: (key: PropertyKey, index: number) => void) {
+	Reflect.ownKeys(object).forEach((key, i) => {
+		if (key !== "___type")
+			func(key, i)
+	})
+}
 
 export class Serializer {
 	/**
@@ -36,7 +49,7 @@ export class Serializer {
 	 * to `toString()`.
 	 */
 	public static run(v: any) {
-		var s = new Serializer();
+		let s = new Serializer();
 		s.serialize(v);
 		return s.toString();
 	}
@@ -86,13 +99,11 @@ export class Serializer {
 		switch (typeof v) {
 			case "bigint":
 				throw err();
-				break;
 			case "boolean":
 				this.buf += v ? "t" : "f";
 				break;
 			case "function":
-				throw new Error("Cannot serialize function");
-				break;
+				throw err("function");
 			case "number":
 				if (isNaN(v)) {
 					this.buf += "k";
@@ -119,48 +130,62 @@ export class Serializer {
 				break;
 			case "symbol":
 				throw err();
-				break;
 			case "undefined":
 				this.buf += "n";
 				return;
 			case "object":
+				// Null
 				if (v === null) {
 					this.buf += "n";
 					return;
 				}
 
+				// String/Enum/Class Refs
 				if (this.useCache && this.serializeRef(v))
 					return;
 
+				// Array / List
 				if (Array.isArray(v)) {
-					let ucount = 0;
-					this.buf += "a"; // Support list ?
-					let l = v.length;
-					for (let i = 0; i < l; i++) {
-						if (v[i] === null || v[i] === undefined)
-							ucount++
-						else {
-							if (ucount > 0) {
-								if (ucount == 1)
-									this.buf += "n";
-								else {
-									this.buf += `u${ucount}`;
-								}
-								ucount = 0;
-							}
+					if (getTypeHint(v) === "List") {
+						this.buf += "l";
+						let l = v.length;
+						for (let i = 0; i < l; i++) {
 							this.serialize(v[i]);
 						}
-					}
-					if (ucount > 0) {
-						if (ucount == 1)
-							this.buf += "n";
-						else {
-							this.buf += `u${ucount}`;
+						this.buf += "h";
+						return
+					} else { // Array of no type hint
+						let ucount = 0;
+						this.buf += "a";
+						let l = v.length;
+						for (let i = 0; i < l; i++) {
+							if (v[i] === null || v[i] === undefined)
+								ucount++
+							else {
+								if (ucount > 0) {
+									if (ucount == 1)
+										this.buf += "n";
+									else {
+										this.buf += `u${ucount}`;
+									}
+									ucount = 0;
+								}
+								this.serialize(v[i]);
+							}
 						}
+						if (ucount > 0) {
+							if (ucount == 1)
+								this.buf += "n";
+							else {
+								this.buf += `u${ucount}`;
+							}
+						}
+						this.buf += "h";
+						return
 					}
-					this.buf += "h";
-					return
 				}
+
+				// String
 				if (Buffer.isBuffer(v)) {
 					this.buf += "s";
 					let bufStr = v.toString('base64')
@@ -172,6 +197,16 @@ export class Serializer {
 					this.buf += bufStr;
 					return;
 				}
+
+				// Exception
+				if (v instanceof Error) {
+					this.buf += "x";
+					// @ts-ignore
+					this.serialize(v.data ?? v.message);
+					return;
+				}
+
+				// Enums
 				if (v instanceof HaxeEnum && v.constructor) {
 					const constructor = v.constructor as typeof HaxeEnum
 					if (this.useEnumIndex) {
@@ -202,6 +237,8 @@ export class Serializer {
 						return;
 					}
 				}
+
+				// Other classes
 				if (v.constructor?.name) {
 					try {
 						this.serializeClass(v, v.constructor.name);
@@ -217,8 +254,8 @@ export class Serializer {
 	}
 
 	protected serializeString(s: string) {
-		var x = this.shash[s];
-		if (x != null) {
+		let x = this.shash[s];
+		if (this.useCache && x != null) {
 			this.buf += "R";
 			this.buf += x;
 			return;
@@ -265,18 +302,62 @@ export class Serializer {
 			// 	Float64Array
 			// 	BigInt64Array
 			// 	BigUint64Array
+			case WeakMap.name:
+				// We can't iterate over fields...
+				throw new Error("WeakMap");
 			case Object.name:
-				this.buf += "o";
-				this.serializeFields(v);
-				return;
+				let typeHint = getTypeHint(v)
+				switch (typeHint) {
+					case "IntMap":
+						this.buf += "q";
+						iterateFieldsObject(v, key => {
+							if (typeof key !== "number") {
+								this.buf += `:${parseInt(String(key))}`;
+							} else {
+								this.buf += `:${Number(key)}`;
+							}
+							this.serialize(Reflect.get(v, key));
+						});
+						this.buf += "h";
+						return;
+					case "ObjectMap":
+						if (Array.isArray(v["keys"]) && Array.isArray(v["values"])) {
+							this.buf += "M";
+							for (let i = 0; i < v.keys.length; i++) {
+								this.serialize(v.keys[i]);
+								this.serialize(v.values[i]);
+							}
+							this.buf += "h";
+							return;
+						}
+						throw new Error("Invalid ObjectMap");
+					case "StringMap":
+						this.buf += "b";
+						iterateFieldsObject(v, key => {
+							this.serializeString(String(key))
+							this.serialize(Reflect.get(v, key));
+						});
+						this.buf += "h";
+						return;
+					case "List":
+						throw new Error("___type is List but the value is not a array")
+					default:
+						if (typeHint) {
+							this.serializeClass(v, typeHint);
+							return;
+						}
+						this.buf += "o";
+						this.serializeFields(v);
+						return;
+				}
 			default:
 				// if(this.useCache) this.cache.pop(); // From haxe version. Why??
-				if (typeof v['_qwkpktEncode'] === 'function') {
+				if (typeof v['_haxeEncode'] === 'function') {
 					this.buf += "C";
 					this.serializeString(className);
 					if (this.useCache)
 						this.cache.push(v);
-					v._qwkpktEncode(this);
+					v._haxeEncode(this);
 					this.buf += "g";
 				} else {
 					this.buf += "c";
@@ -289,14 +370,14 @@ export class Serializer {
 		}
 	}
 
-	protected serializeFields(v: {}) {
-		Reflect.ownKeys(v).forEach(key => {
+	protected serializeFields(v: {}, endChar = "g") {
+		iterateFieldsObject(v, key => {
 			if (typeof key !== 'string')
 				throw new Error(`Class field ${String(key)} is a ` + typeof key)
 			this.serializeString(key);
 			this.serialize(Reflect.get(v, key));
 		});
-		this.buf += "g";
+		this.buf += endChar;
 	}
 
 	protected serializeRef(v: any) {
@@ -312,12 +393,6 @@ export class Serializer {
 		}
 		this.cache.push(v);
 		return false;
-	}
-}
-
-interface CClass {
-	constructor: {
-		name: string
 	}
 }
 
@@ -344,7 +419,7 @@ interface CClass {
 // 	t : true
 // 	u : array nulls
 // 	v : date
-// 	w : enum *** not impl
+// 	w : enum (by name)
 // 	x : exception
 // 	y : urlencoded string
 // 	z : zero

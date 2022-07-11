@@ -1,6 +1,6 @@
 import "jasmine"
 import {Serializer, Unserializer} from "../../src";
-import {EnumTest, EnumVariant} from "../packet/EnumTest";
+import {EnumTest, EnumVariant} from "./EnumTest";
 
 describe("Enum", () => {
     Unserializer.registerSerializableEnum(EnumTest);

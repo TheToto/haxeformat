@@ -1,9 +1,20 @@
 import {Buffer} from 'buffer'
 import {HaxeEnum} from "./HaxeEnum";
+import {HaxeException} from "./HaxeException";
+import {type} from "os";
+
+export type TypeHint = "List" | "StringMap" | "IntMap" | "ObjectMap" | string
 
 export interface TypeResolver {
-    resolveClass: (name: string) => (new () => any)
-    resolveEnum: (name: string) => typeof HaxeEnum
+    resolveClass: (name: string) => (new () => any) | undefined | null
+    resolveEnum: (name: string) => typeof HaxeEnum | undefined | null
+}
+
+function addTypeHint(value: any, type: TypeHint) {
+    Object.defineProperty(value, "___type", {
+        enumerable: false,
+        value: type
+    })
 }
 
 export class Unserializer {
@@ -73,17 +84,16 @@ export class Unserializer {
      * this can be changed for the current instance
      */
     public resolver: TypeResolver;
+    public allowUnregistered: boolean;
+    public addTypeHints: boolean
 
     constructor(s: string) {
         Unserializer.initialize();
         this.buf = s;
         this.length = s.length;
-        let r = Unserializer.DEFAULT_RESOLVER;
-        if (r === null || r === undefined) {
-            r = Unserializer.DefaultResolver;
-            Unserializer.DEFAULT_RESOLVER = r;
-        }
-        this.resolver = r;
+        this.resolver = Unserializer.DEFAULT_RESOLVER;
+        this.allowUnregistered = false;
+        this.addTypeHints = true;
     }
 
     protected isEof(c: number): boolean {
@@ -98,19 +108,19 @@ export class Unserializer {
             if (this.buf.charCodeAt(this.pos) == 103) {
                 break;
             }
-            var k = this.unserialize();
+            let k = this.unserialize();
             if (typeof (k) != "string") {
                 throw new Error("Invalid object key");
             }
-            var v = this.unserialize();
+            let v = this.unserialize();
             o[k] = v;
         }
         this.pos++;
     }
 
-    protected unserializeEnum(edecl: typeof HaxeEnum, tag: string | number): any {
+    protected unserializeEnum(edecl: typeof HaxeEnum | undefined | null, tag: string | number, ename: string): any {
         this.pos++; /* skip ':' */
-        let constructs = edecl.getEnumConstructs();
+        let constructs = edecl?.getEnumConstructs() ?? [];
 
         let enumClass;
         if (typeof tag == "number") {
@@ -118,21 +128,48 @@ export class Unserializer {
         } else {
             enumClass = constructs.find((e: typeof HaxeEnum) => e.tag === tag);
         }
-        if (enumClass == null)
+        if (!enumClass && !this.allowUnregistered)
             throw new Error("Unknown enum index/name : " + tag);
         let numArgs = this.readDigits();
         let args = Array(numArgs).fill(0).map(_ => this.unserialize());
-        // @ts-ignore
-        return new enumClass(...args);
+        if (enumClass) {
+            // @ts-ignore
+            return new enumClass(...args);
+        } else {
+            // If enum is not registered, craft the enum. A bit dirty though.
+            const genericEnum = Object.create(HaxeEnum.prototype);
+            Object.defineProperty(genericEnum.constructor, 'enum', {
+                get: () => ename
+            });
+            Object.defineProperty(genericEnum.constructor, 'tag', {
+                get: () => tag
+            });
+            Object.defineProperty(genericEnum.constructor, 'tag', {
+                get: () => tag
+            });
+            Object.defineProperty(genericEnum.constructor, 'getEnumConstructs', {
+                value: () => {
+                    if (typeof tag === "number") {
+                        const c = new Array(tag + 1).fill({});
+                        c[tag] = {tag};
+                        return c
+                    }
+                    return []
+                }
+            });
+            genericEnum["getParams"] = () => args
+            genericEnum["args"] = args
+            return genericEnum
+        }
     }
 
     protected readDigits(): number {
-        var k = 0;
-        var s = false;
-        var fpos = this.pos;
+        let k = 0;
+        let s = false;
+        let fpos = this.pos;
         let get = this.buf.charCodeAt.bind(this.buf);
         while (true) {
-            var c: number = get(this.pos);
+            let c: number = get(this.pos);
             if (this.isEof(c))
                 break;
             if (c === 45 /*"-"*/) {
@@ -153,10 +190,10 @@ export class Unserializer {
     }
 
     protected readFloat() {
-        var p1 = this.pos;
+        let p1 = this.pos;
         let get = this.buf.charCodeAt.bind(this.buf);
         while (true) {
-            var c: number = get(this.pos);
+            let c: number = get(this.pos);
             if (this.isEof(c))
                 break;
             // + - . , 0-9
@@ -187,10 +224,10 @@ export class Unserializer {
             case 100: // "d" float
                 return this.readFloat();
             case 121: // "y" string
-                var len = this.readDigits();
+                let len = this.readDigits();
                 if (get(this.pos++) !== 58 /*":"*/ || this.length - this.pos < len)
                     throw new Error("Invalid string length");
-                var s = this.buf.substr(this.pos, len);
+                let s = this.buf.substr(this.pos, len);
                 this.pos += len;
                 s = decodeURIComponent(s);
                 this.scache.push(s);
@@ -202,90 +239,100 @@ export class Unserializer {
             case 112: // "p"
                 return Number.POSITIVE_INFINITY;
             case 97: // "a" Array
-                var a = new Array<any>();
+                let a = new Array<any>();
                 this.cache.push(a);
                 while (true) {
-                    var c = get(this.pos);
+                    let c = get(this.pos);
                     if (c === 104 /* "h" */) {
                         this.pos++;
                         break;
                     }
                     if (c === 117 /* "u" */) {
                         this.pos++;
-                        var n = this.readDigits();
+                        let n = this.readDigits();
                         a[a.length + n - 1] = null;
                     } else
                         a.push(this.unserialize());
                 }
                 return a;
             case 111: // "o" object
-                var o = {};
+                let o = {};
                 this.cache.push(o);
                 this.unserializeObject(o);
                 return o;
             case 114: // "r" class enum or structure reference
-                var n = this.readDigits();
+                let n = this.readDigits();
                 if (n < 0 || n >= this.cache.length)
                     throw new Error("Invalid reference");
                 return this.cache[n];
             case 82: // "R" string reference
-                var n = this.readDigits();
-                if (n < 0 || n >= this.scache.length)
+                let nn = this.readDigits();
+                if (nn < 0 || nn >= this.scache.length)
                     throw new Error("Invalid string reference");
-                return this.scache[n];
+                return this.scache[nn];
             case 120: // "x" throw an exception
-                throw new Error(this.unserialize());
+                throw new HaxeException(this.unserialize());
             case 99: // "c" class instance
                 let cname = this.unserialize();
                 let cli = this.resolver.resolveClass(cname);
-                if (!cli)
+                if (!cli && !this.allowUnregistered)
                     throw new Error("Class not found " + cname);
-                let co: any = Object.create(cli.prototype); // creates an empty instance, no constructor is called
+                let co: any = Object.create(cli?.prototype ?? Object.prototype); // creates an empty instance, no constructor is called
+                if (!cli && this.addTypeHints)
+                    addTypeHint(co, cname)
                 this.cache.push(co);
                 this.unserializeObject(co);
                 return co;
             case 119: // "w" enum instance by name
                 let ename1 = this.unserialize();
                 let edecl1 = this.resolver.resolveEnum(ename1);
-                if (edecl1 == null)
+                if (!edecl1 && !this.allowUnregistered)
                     throw new Error("Enum not found " + ename1);
-                let e1 = this.unserializeEnum(edecl1, this.unserialize());
+                let e1 = this.unserializeEnum(edecl1, this.unserialize(), ename1);
                 this.cache.push(e1);
                 this.pos++;
                 return e1;
             case 106: // "j" enum instance by index
                 let ename2 = this.unserialize();
                 let edecl2 = this.resolver.resolveEnum(ename2);
-                if (edecl2 == null)
+                if (!edecl2 && !this.allowUnregistered)
                     throw new Error("Enum not found " + ename2);
                 this.pos++; /* skip ':' */
                 let index = this.readDigits();
-                let e2 = this.unserializeEnum(edecl2, index);
+                let e2 = this.unserializeEnum(edecl2, index, ename2);
                 this.cache.push(e2);
                 this.pos++;
                 return e2;
             case 108: // "l" haxe list to javascript array
-                var l = new Array();
+                let l = new Array<any>();
+                if (this.addTypeHints)
+                    // @ts-ignore
+                    addTypeHint(l, "List")
                 this.cache.push(l);
                 while (get(this.pos) !== 104 /* "h" */)
                     l.push(this.unserialize());
                 this.pos++;
                 return l;
             case 98: // "b" string map
-                var hsm: Record<string, any> = {};
+                let hsm: Record<string, any> = {};
+                if (this.addTypeHints)
+                    addTypeHint(hsm, "StringMap");
                 this.cache.push(hsm);
                 while (get(this.pos) != 104 /* "h" */) {
-                    var smt = this.unserialize();
+                    let smt = this.unserialize();
                     hsm[smt] = this.unserialize();
                 }
                 this.pos++;
                 return hsm;
             case 113: // "q" haxe int map
                 let him: Record<number, any> = {};
+                if (this.addTypeHints)
+                    // @ts-ignore
+                    addTypeHint(him, "IntMap");
                 this.cache.push(him);
-                var c = get(this.pos++);
+                let c = get(this.pos++);
                 while (c === 58 /* ":" */) {
-                    var i = this.readDigits();
+                    let i = this.readDigits();
                     him[i] = this.unserialize();
                     c = get(this.pos++);
                 }
@@ -293,18 +340,21 @@ export class Unserializer {
                     throw new Error("Invalid IntMap format");
                 return him;
             case 77: // "M" haxe object map
-                var wm = new WeakMap();
+                let wm: any = {keys: [], values: []};
+                if (this.addTypeHints)
+                    // @ts-ignore
+                    addTypeHint(wm, "ObjectMap");
                 this.cache.push(wm);
                 while (get(this.pos) !== 104 /* "h" */) {
-                    var wms = this.unserialize();
-                    wm.set(wms, this.unserialize());
+                    wm.keys.push(this.unserialize());
+                    wm.values.push(this.unserialize());
                 }
                 this.pos++;
                 return wm;
             case 118: // "v" Date
-                var dateStr = this.buf.substr(this.pos, 19);
+                let dateStr = this.buf.substr(this.pos, 19);
                 this.pos += 19;
-                var [date, time] = dateStr.split(' ')
+                let [date, time] = dateStr.split(' ')
                 let d: Date = new Date(`${date}T${time}Z`);
                 this.cache.push(d);
                 return d;
@@ -327,21 +377,21 @@ export class Unserializer {
                     throw new Error("Class not found " + name);
                 let cclo: any = Object.create(cl.prototype); // creates an empty instance, no constructor is called
                 this.cache.push(cclo);
-                // if this throws, it is because the user had an '_qwkpktEncode' method, but no '_qwkpktDecode' method
-                cclo._qwkpktDecode(this);
+                // if this throws, it is because the user had an '_haxeEncode' method, but no '_haxeDecode' method
+                cclo._haxeDecode(this);
                 if (get(this.pos++) !== 103 /*"g"*/)
                     throw new Error("Invalid custom data");
                 return cclo;
             case 65: // "A" Class<Dynamic>
-                // var name = this.unserialize();
-                // var cl = resolver.resolveClass(name);
+                // let name = this.unserialize();
+                // let cl = resolver.resolveClass(name);
                 // if (cl == null)
                 // 	throw new Error("Class not found " + name);
                 // return cl;
                 throw err("classes");
             case 66: // "B" Enum<Dynamic>
-                // var name = this.unserialize();
-                // var e = resolver.resolveEnum(name);
+                // let name = this.unserialize();
+                // let e = resolver.resolveEnum(name);
                 // if (e == null)
                 // 	throw new Error("Enum not found " + name);
                 // return e;
