@@ -1,6 +1,6 @@
 {
   "name": "haxeformat",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Haxe serialization format in JS",
   "keywords": [
     "serialize",
