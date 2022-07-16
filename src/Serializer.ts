@@ -1,6 +1,7 @@
-import { Buffer } from 'buffer'
+import {Buffer} from 'buffer'
 import {HaxeEnum} from "./HaxeEnum";
 import {TypeHint} from "./Unserializer";
+import {HaxeType} from "./HaxeType";
 import {type} from "os";
 
 function getTypeHint(value: any): TypeHint | null {
@@ -92,170 +93,142 @@ export class Serializer {
 	 * @param v Any value to serialize
 	 */
 	public serialize(v: any): void {
-		let err = (s?: string) => {
-			s = s ? s : typeof v;
-			return new Error("Serialization of " + s + " not implemented");
-		}
-		switch (typeof v) {
-			case "bigint":
-				throw err();
-			case "boolean":
-				this.buf += v ? "t" : "f";
-				break;
-			case "function":
-				throw err("function");
-			case "number":
+		switch (this.detectHaxeType(v)) {
+			case HaxeType.TNull:
+				this.buf += "n";
+				return;
+			case HaxeType.TInt: // TFloat / TInt
+				if (v == 0) {
+					this.buf += "z";
+				} else {
+					this.buf += `i${v}`;
+				}
+				return;
+			case HaxeType.TFloat:
 				if (isNaN(v)) {
 					this.buf += "k";
-					return;
-				}
-				if (!isFinite(v)) {
+				} else if (!isFinite(v)) {
 					this.buf += (v < 0) ? "m" : "p";
-					return;
-				}
-				// Haxe's int test
-				if (Math.ceil(v) == v % 2147483648.0) {
-					if (v == 0) {
-						this.buf += "z";
-						return;
-					}
-					this.buf += `i${v}`;
-					return;
 				} else {
 					this.buf += `d${v}`;
 				}
-				break;
-			case "string":
-				this.serializeString(v);
-				break;
-			case "symbol":
-				throw err();
-			case "undefined":
-				this.buf += "n";
 				return;
-			case "object":
-				// Null
-				if (v === null) {
-					this.buf += "n";
+			case HaxeType.TBool:
+				this.buf += v ? "t" : "f";
+				return;
+			case HaxeType.TObject:
+			case HaxeType.TClass:
+				if (typeof v === "string") {
+					this.serializeString(v);
 					return;
 				}
 
-				// String/Enum/Class Refs
 				if (this.useCache && this.serializeRef(v))
 					return;
 
-				// Array / List
 				if (Array.isArray(v)) {
 					if (getTypeHint(v) === "List") {
 						this.buf += "l";
-						let l = v.length;
-						for (let i = 0; i < l; i++) {
+						for (let i = 0; i < v.length; i++) {
 							this.serialize(v[i]);
 						}
-						this.buf += "h";
-						return
 					} else { // Array of no type hint
 						let ucount = 0;
 						this.buf += "a";
 						let l = v.length;
 						for (let i = 0; i < l; i++) {
-							if (v[i] === null || v[i] === undefined)
+							if (v[i] === null || v[i] === undefined) {
 								ucount++
-							else {
+							} else {
 								if (ucount > 0) {
-									if (ucount == 1)
-										this.buf += "n";
-									else {
-										this.buf += `u${ucount}`;
-									}
+									if (ucount == 1) this.buf += "n";
+									else this.buf += `u${ucount}`;
 									ucount = 0;
 								}
 								this.serialize(v[i]);
 							}
 						}
 						if (ucount > 0) {
-							if (ucount == 1)
-								this.buf += "n";
-							else {
-								this.buf += `u${ucount}`;
-							}
+							if (ucount == 1) this.buf += "n";
+							else this.buf += `u${ucount}`;
 						}
-						this.buf += "h";
-						return
 					}
-				}
-
-				// String
-				if (Buffer.isBuffer(v)) {
+					this.buf += "h";
+					return;
+				} else if (Buffer.isBuffer(v)) {
 					this.buf += "s";
 					let bufStr = v.toString('base64')
 						.replace(/\+/g, '%')
 						.replace(/\//g, ':')
-						.replace(/={1,2}$/, '');
+						.replace(/={1,3}$/, '');
 					this.buf += bufStr.length;
 					this.buf += ":";
 					this.buf += bufStr;
 					return;
-				}
-
-				// Exception
-				if (v instanceof Error) {
-					this.buf += "x";
-					// @ts-ignore
-					this.serialize(v.data ?? v.message);
+				} else if (v.constructor?.name) {
+					this.serializeClass(v, v.constructor.name)
 					return;
 				}
+				throw new Error("Type not detected");
+			case HaxeType.TEnum:
+				if (this.useCache && this.serializeRef(v))
+					return
 
-				// Enums
+				const constructor = v.constructor as typeof HaxeEnum
+				this.buf += this.useEnumIndex ? "j" : "w";
+				this.serializeString(constructor.enum);
+				if (this.useEnumIndex) {
+					this.buf += ":";
+					let constructs = constructor.getEnumConstructs();
+					let index = constructs.findIndex((e:typeof HaxeEnum) => e.tag === constructor.tag);
+					if (index === -1)
+						throw new Error(`Invalid enum tag ${constructor.tag}. Should be one of "${constructs.map((c: typeof HaxeEnum) => c.tag).join(',')}".`);
+					this.buf += index;
+				} else {
+					this.serializeString(constructor.tag);
+				}
+				this.buf += ":";
+				let params = v.getParams();
+				this.buf += params.length;
+				params.forEach((param:any) => {
+					this.serialize(param);
+				})
+				return;
+			case HaxeType.TFunction:
+				throw new Error(`Serialization of 'TFunction' not implemented`);
+		}
+	}
+
+	protected detectHaxeType(v: any): HaxeType {
+		switch (typeof v) {
+			case "boolean": // TBool
+				return HaxeType.TBool;
+			case "number": // TFloat / TInt
+				if (!isNaN(v) && isFinite(v) && Math.ceil(v) == v % 2147483648.0) {
+					return HaxeType.TInt;
+				}
+				return HaxeType.TFloat;
+				break;
+			case "string":
+				return HaxeType.TClass;
+			case "undefined":
+				return HaxeType.TNull
+			case "object":
+				if (v === null) {
+					return HaxeType.TNull
+				}
 				if (v instanceof HaxeEnum && v.constructor) {
-					const constructor = v.constructor as typeof HaxeEnum
-					if (this.useEnumIndex) {
-						this.buf += "j";
-						this.serialize(constructor.enum);
-						this.buf += ":";
-						let constructs = constructor.getEnumConstructs();
-						let index = constructs.findIndex((e:typeof HaxeEnum) => e.tag === constructor.tag);
-						if (index === -1) throw new Error("Invalid enum constructs");
-						this.buf += index;
-						this.buf += ":";
-						let params = v.getParams();
-						this.buf += params.length;
-						params.forEach((param:any) => {
-							this.serialize(param);
-						})
-						return;
-					} else {
-						this.buf += "w";
-						this.serialize(constructor.enum);
-						this.serialize(constructor.tag);
-						this.buf += ":";
-						let params = v.getParams();
-						this.buf += params.length;
-						params.forEach((param:any) => {
-							this.serialize(param);
-						})
-						return;
-					}
+					return HaxeType.TEnum;
 				}
-
-				// Other classes
-				if (v.constructor?.name) {
-					try {
-						this.serializeClass(v, v.constructor.name);
-					} catch (e) {
-						throw err(e.message);
-					}
-					return;
-				}
-				throw new Error("Not detected");
-			default:
-				throw new Error("unknown type " + v);
+				return HaxeType.TClass;
+			default: // TFunction & TUnknown (bigint, function, symbol)
+				throw new Error(`Serialization ${typeof v} of not implemented`);
 		}
 	}
 
 	protected serializeString(s: string) {
 		let x = this.shash[s];
-		if (this.useCache && x != null) {
+		if (x !== undefined) {
 			this.buf += "R";
 			this.buf += x;
 			return;
@@ -281,30 +254,20 @@ export class Serializer {
 	}
 
 	protected serializeClass(v: any, className: string) {
-		// uses .name syntax because there may be an issue in minified code
-		// where the name of the class has been changed. Not so for built-ins
-		// but good practice nonetheless
 		switch (className) {
 			case Date.name:
 				this.buf += "v";
 				this.buf += this.serializeDate(v);
-				break;
+				return;
 			case Array.name:
 				throw new Error("Arrays should not get here");
-			// 	Int8Array
-			// 	Uint8Array
-			// 	Uint8ClampedArray
-			// 	Int16Array
-			// 	Uint16Array
-			// 	Int32Array
-			// 	Uint32Array
-			// 	Float32Array
-			// 	Float64Array
-			// 	BigInt64Array
-			// 	BigUint64Array
 			case WeakMap.name:
 				// We can't iterate over fields...
-				throw new Error("WeakMap");
+				throw new Error("WeakMap not supported");
+			case Error.name:
+				this.buf += "x";
+				this.serialize(v.data ?? v.message);
+				return;
 			case Object.name:
 				let typeHint = getTypeHint(v)
 				switch (typeHint) {
@@ -340,7 +303,7 @@ export class Serializer {
 						this.buf += "h";
 						return;
 					case "List":
-						throw new Error("___type is List but the value is not a array")
+						throw new Error("___type is List but the value is not an array")
 					default:
 						if (typeHint) {
 							this.serializeClass(v, typeHint);
@@ -351,19 +314,14 @@ export class Serializer {
 						return;
 				}
 			default:
-				// if(this.useCache) this.cache.pop(); // From haxe version. Why??
-				if (typeof v['_haxeEncode'] === 'function') {
+				if (typeof v['hxSerialize'] === 'function') {
 					this.buf += "C";
 					this.serializeString(className);
-					if (this.useCache)
-						this.cache.push(v);
-					v._haxeEncode(this);
+					v.hxSerialize(this);
 					this.buf += "g";
 				} else {
 					this.buf += "c";
 					this.serializeString(className);
-					if (this.useCache)
-						this.cache.push(v);
 					this.serializeFields(v);
 				}
 				return;

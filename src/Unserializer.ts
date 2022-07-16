@@ -1,5 +1,5 @@
 import {Buffer} from 'buffer'
-import {HaxeEnum} from "./HaxeEnum";
+import {createGenericHaxeEnum, HaxeEnum} from "./HaxeEnum";
 import {HaxeException} from "./HaxeException";
 import {type} from "os";
 
@@ -118,7 +118,7 @@ export class Unserializer {
         this.pos++;
     }
 
-    protected unserializeEnum(edecl: typeof HaxeEnum | undefined | null, tag: string | number, ename: string): any {
+    protected unserializeEnum(edecl: typeof HaxeEnum | undefined | null, tag: string | number, ename: string): HaxeEnum {
         this.pos++; /* skip ':' */
         let constructs = edecl?.getEnumConstructs() ?? [];
 
@@ -133,26 +133,10 @@ export class Unserializer {
         let numArgs = this.readDigits();
         let args = Array(numArgs).fill(0).map(_ => this.unserialize());
         if (enumClass) {
-            // @ts-ignore
             return new enumClass(...args);
         } else {
             // If enum is not registered, craft the enum. A bit dirty though.
-            const genericEnum = Object.create(HaxeEnum.prototype);
-            genericEnum.constructor.enum = ename;
-            genericEnum.constructor.tag = tag;
-            Object.defineProperty(genericEnum.constructor, 'getEnumConstructs', {
-                value: () => {
-                    if (typeof tag === "number") {
-                        const c = new Array(tag + 1).fill({});
-                        c[tag] = {tag};
-                        return c
-                    }
-                    return []
-                }
-            });
-            genericEnum["getParams"] = () => args
-            genericEnum["args"] = args
-            return genericEnum
+            return createGenericHaxeEnum(ename, tag, args);
         }
     }
 
@@ -297,7 +281,6 @@ export class Unserializer {
             case 108: // "l" haxe list to javascript array
                 let l = new Array<any>();
                 if (this.addTypeHints)
-                    // @ts-ignore
                     addTypeHint(l, "List")
                 this.cache.push(l);
                 while (get(this.pos) !== 104 /* "h" */)
@@ -318,7 +301,6 @@ export class Unserializer {
             case 113: // "q" haxe int map
                 let him: Record<number, any> = {};
                 if (this.addTypeHints)
-                    // @ts-ignore
                     addTypeHint(him, "IntMap");
                 this.cache.push(him);
                 let c = get(this.pos++);
@@ -333,7 +315,6 @@ export class Unserializer {
             case 77: // "M" haxe object map
                 let wm: any = {keys: [], values: []};
                 if (this.addTypeHints)
-                    // @ts-ignore
                     addTypeHint(wm, "ObjectMap");
                 this.cache.push(wm);
                 while (get(this.pos) !== 104 /* "h" */) {
@@ -368,8 +349,8 @@ export class Unserializer {
                     throw new Error("Class not found " + name);
                 let cclo: any = Object.create(cl.prototype); // creates an empty instance, no constructor is called
                 this.cache.push(cclo);
-                // if this throws, it is because the user had an '_haxeEncode' method, but no '_haxeDecode' method
-                cclo._haxeDecode(this);
+                // if this throws, it is because the user had an 'hxSerialize' method, but no 'hxUnserialize' method
+                cclo.hxUnserialize(this);
                 if (get(this.pos++) !== 103 /*"g"*/)
                     throw new Error("Invalid custom data");
                 return cclo;
@@ -379,14 +360,14 @@ export class Unserializer {
                 // if (cl == null)
                 // 	throw new Error("Class not found " + name);
                 // return cl;
-                throw err("classes");
+                throw err("Class<Dynamic>");
             case 66: // "B" Enum<Dynamic>
                 // let name = this.unserialize();
                 // let e = resolver.resolveEnum(name);
                 // if (e == null)
                 // 	throw new Error("Enum not found " + name);
                 // return e;
-                throw err("enums");
+                throw err("Enum<Dynamic>");
             default:
         }
         this.pos--;

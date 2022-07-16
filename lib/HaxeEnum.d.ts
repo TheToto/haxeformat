@@ -4,3 +4,4 @@ export declare abstract class HaxeEnum {
     static getEnumConstructs(): any[];
     getParams(): any[];
 }
+export declare function createGenericHaxeEnum(name: string, tag: string | number, args: any[]): HaxeEnum;

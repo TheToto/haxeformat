@@ -1,4 +1,5 @@
 /// <reference types="node" />
+import { HaxeType } from "./HaxeType";
 export declare class Serializer {
     static USE_CACHE: boolean;
     static USE_ENUM_INDEX: boolean;
@@ -13,6 +14,7 @@ export declare class Serializer {
     toString(): string;
     toBuffer(): Buffer;
     serialize(v: any): void;
+    protected detectHaxeType(v: any): HaxeType;
     protected serializeString(s: string): void;
     protected serializeDate(date: Date): string;
     protected serializeClass(v: any, className: string): void;
