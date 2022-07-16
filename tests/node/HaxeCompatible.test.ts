@@ -1,15 +1,15 @@
 import "jasmine"
-import { Serializer } from '../../src/Serializer';
-import { Unserializer } from '../../src/Unserializer';
-import {HaxeException} from "../../src";
+import { Serializer } from "../../src/Serializer"
+import { Unserializer } from "../../src/Unserializer"
+import { HaxeException } from "../../src"
 
 function unserializeAndSerialize(serialized: string, useEnumIndex: boolean = false) {
-    let U = new Unserializer(serialized);
-    U.allowUnregistered = true;
-    let v = U.unserialize();
-    let S = new Serializer();
-    S.useEnumIndex = useEnumIndex;
-    S.serialize(v);
+    let U = new Unserializer(serialized)
+    U.allowUnregistered = true
+    let v = U.unserialize()
+    let S = new Serializer()
+    S.useEnumIndex = useEnumIndex
+    S.serialize(v)
     return S.toString()
 }
 
@@ -44,15 +44,15 @@ describe("HaxeCompatible", () => {
 
     it("Exception", () => {
         let hx = "xy10:hi%20there" // => new HaxeException("hi there")
-        let U = new Unserializer(hx);
+        let U = new Unserializer(hx)
         try {
             U.unserialize()
             expect(false).toBe(true)
         } catch (e) {
             expect(e.name).toBe("HaxeException")
-            let S = new Serializer();
-            S.serialize(new HaxeException(e.data));
+            let S = new Serializer()
+            S.serialize(new HaxeException(e.data))
             expect(S.toString()).toBe(hx)
         }
     })
-});
+})

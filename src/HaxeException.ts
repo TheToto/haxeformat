@@ -4,13 +4,13 @@ export class HaxeException extends Error {
     data: any
 
     constructor(data: any) {
-        super(`Haxe Exception: ${data}`);
+        super(`Haxe Exception: ${data}`)
 
         if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, HaxeException);
+            Error.captureStackTrace(this, HaxeException)
         }
 
-        this.name = 'HaxeException';
-        this.data = data;
+        this.name = "HaxeException"
+        this.data = data
     }
 }
